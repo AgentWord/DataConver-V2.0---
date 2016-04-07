@@ -85,6 +85,7 @@
             // 
             this.CellSize.DisplayMember = "Text";
             this.CellSize.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.CellSize.Enabled = false;
             this.CellSize.FormattingEnabled = true;
             this.CellSize.ItemHeight = 15;
             this.CellSize.Items.AddRange(new object[] {

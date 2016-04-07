@@ -57,17 +57,22 @@ namespace DataConver
             this.progressBar = progressBar;
             this.MessageShow = MessageShow;
         }
-        public void controller(string txtPath, string shpFilePath, string shpFileName, string cellSize, string SavaPath)
-        {
-          //  readtxt += readTXT(txtPath, shpFilePath, shpFileName, cellSize, SavaPath);
-        }
-        //实时进度信息
+       
+        
+        /// <summary>
+        /// 实时进度信息
+        /// </summary>
+        /// <param name="p"></param>
         public void pgrs(int p)
         {
             double percent = Convert.ToDouble(p) / Convert.ToDouble(max);
             lb.Text = percent.ToString("0%");
         }
-        //实时输出信息
+        
+        /// <summary>
+        /// 实时信息在richtext中显示
+        /// </summary>
+        /// <param name="msg">输入的信息</param>
         public void Msg(string msg)
         {
             try
@@ -78,10 +83,18 @@ namespace DataConver
                 MessageShow.Focus();
                 MessageShow.SelectionStart = MessageShow.Text.Length;///焦点在最后
             }
-            catch
-            { }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
-        //时间计算
+        
+        /// <summary>
+        /// 计算时间
+        /// </summary>
+        /// <param name="dateBegin">开始时间</param>
+        /// <param name="dateEnd">结束时间</param>
+        /// <returns></returns>
         public  string ExecDateDiff(DateTime dateBegin, DateTime dateEnd)
         {
             TimeSpan ts1 = new TimeSpan(dateBegin.Ticks);
@@ -96,7 +109,13 @@ namespace DataConver
          * 3、定义参数：输出路径
          * 
          */
-        //主处理函数
+        
+        /// <summary>
+        /// 集成处理函数
+        /// </summary>
+        /// <param name="dataPath">数据文件路径</param>
+        /// <param name="password">数据密码</param>
+        /// <returns></returns>
         public bool DealAll(string dataPath, string password)
         {
             set.passWord = password;
@@ -278,10 +297,15 @@ namespace DataConver
 
 //=============================功能函数========================================
        //---------------------数据提取------------------------------------------
-        //读取groupLayer
+        /// <summary>
+        ///  读取groupLayer
+        /// </summary>
+        /// <param name="mapControl">mapcontrol控件</param>
+        /// <param name="outPath_Mid">输出路径</param>
         public void getGroupLayer(AxMapControl mapControl, string outPath_Mid)
         {
-            //IFeatureLayer layer = null;
+            if (mapControl == null)
+                return;
             max = mapControl.LayerCount;
 
             for (int i = 0; i < mapControl.LayerCount; i++)
@@ -290,7 +314,7 @@ namespace DataConver
                 ILayer layers = mapControl.get_Layer(i);
                 if (layers is GroupLayer || layers is ICompositeLayer)   //判断是否是groupLayer
                 {
-                    //MessageBox.Show(layers.Name);
+                   
                     //创建文件夹：slgc，ztdt，bhzy
                     if (layers.Name.Equals("水利工程"))
                     {
@@ -367,7 +391,7 @@ namespace DataConver
                                     MessageBox.Show("淹没历时");
                                 if (l.FeatureClass.ShapeType == ESRI.ArcGIS.Geometry.esriGeometryType.esriGeometryPolygon)
                                 {
-                                    shp2Raster(gp, l.FeatureClass, l.Name, ExportPath + "\\" + layer.Name);
+                                    shp2Raster(gp, l.FeatureClass, l.Name, String.Format("{0}\\{1}", ExportPath, layer.Name));
                                     
                                 }
                                 else
@@ -387,7 +411,7 @@ namespace DataConver
                     }
                     catch
                     {
-
+                        Msg("数据类型不识别！");
 
                     }
                     //}
@@ -1482,7 +1506,7 @@ namespace DataConver
                     progressBar.EditValue = lab_progress.Text = "正在统计" + file + "·····";
                     //面积统计
                     //areaSta.Add(Caculate(file.Name, file.DirectoryName, "GRIDAREA"));
-                    object AreaValue = Caculate(file, StaShpPath, "GRIDAREA") / 1000000;//单位平方公里
+                    object AreaValue = Caculate(file, StaShpPath, "GRIDAREA");//单位平方公里
                     areaStaHs.Add(keyName, AreaValue);
                     //村庄统计
                     importTool.createFolder(StaShpPath + "\\czStastic");
