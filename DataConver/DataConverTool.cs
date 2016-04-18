@@ -1,28 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using System.Collections;
-using System.Threading;
 using System.Data.OleDb;
 
 using Microsoft.Office.Interop.Excel;
 using SuperMap.Data;
 using ESRI.ArcGIS.AnalysisTools;
-using ESRI.ArcGIS.DataSourcesGDB;
 using ESRI.ArcGIS.DataSourcesFile;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.DataManagementTools;
 using ESRI.ArcGIS.Carto;
 using ESRI.ArcGIS.Controls;
 using ESRI.ArcGIS.Geoprocessor;
-using ESRI.ArcGIS.Geoprocessing;
-using SuperMapTool;
+using SuperMap;
 
 
 namespace DataConver
@@ -39,7 +34,7 @@ namespace DataConver
         private Hashtable Htable;
         static SuperMap.Data.Workspace wks = new SuperMap.Data.Workspace();
         private Recordset recordset;
-        private ImportTool importTool = new ImportTool(wks);
+        private SuperMapTool importTool = new SuperMapTool(wks);
         private Setting set = new Setting();
         DevExpress.XtraEditors.MarqueeProgressBarControl progressBar;
         DevComponents.DotNetBar.Controls.RichTextBoxEx MessageShow;
@@ -217,6 +212,7 @@ namespace DataConver
                 Msg(lab_progress.Text = "【" + fxtb + "】正在导入Excel支撑数据···");
                 ExcelDataImport("*避洪转移展示支撑数据*.xls*", outPath_Final, "bhzyAttr", "bhzy.udb");
                 ExcelDataImport("*查询业务支撑数据*.xls*", outPath_Final, "ywcxAttr", "ywcx.udb");
+              
 //----------------------------------------------------------------------------------------
                 //避洪转移数据导入
                 Msg(lab_progress.Text = "【" + fxtb + "】正在导入避洪转移数据···");
@@ -319,28 +315,44 @@ namespace DataConver
                     if (layers.Name.Equals("水利工程"))
                     {
                         //创建文件夹：slgc
-                        string slgcPath = importTool.createFolder(outPath_Mid + "\\slgc");
-                        List<string> StoreFeatureLayerSourse = new List<string>();
-                        //将该文件路径传入函数中
-                        getSlgcSubLayer(layers, slgcPath, StoreFeatureLayerSourse);  //递归的思想
+                        if (!System.IO.Directory.Exists(outPath_Mid + "\\slgc"))
+                        {
+                            string slgcPath = importTool.createFolder(outPath_Mid + "\\slgc");
+                            List<string> StoreFeatureLayerSourse = new List<string>();
+                            //将该文件路径传入函数中
+                            getSlgcSubLayer(layers, slgcPath, StoreFeatureLayerSourse);  //递归的思想
+                        }
+                        else
+                            Msg("【水利工程】处理完毕，不在重复处理");
                     }
                     else if (layers.Name.Substring(0, 2).Equals("方案"))
                     {
 
-                        //创建ztdu文件夹
-                        string ztdtPath = importTool.createFolder(outPath_Mid + "\\ztdt");
+                        //if (!System.IO.Directory.Exists(outPath_Mid + "\\ztdt"))
+                        //{
+                            //创建ztdu文件夹
+                            string ztdtPath = importTool.createFolder(outPath_Mid + "\\ztdt");
 
-                        //传入参数  ztdt和方案i
+                            //传入参数  ztdt和方案i
 
-                        getSubLayer(layers, ztdtPath, layers.Name + "_", false);  //递归的思想
+                            getSubLayer(layers, ztdtPath, layers.Name + "_", false);  //递归的思想
+                       // }
+                        //else
+                          //  Msg(String.Format("【{0}】处理完毕，不在重复处理", layers.Name.Substring(0, 3)));
 
                     }
                     else
                     {
-                        //创建bhzy文件夹
-                        string bhzyPath = importTool.createFolder(outPath_Mid + "\\fhys");
-                        ////传入参数
-                        getSubLayer(layers, bhzyPath, null, true);  //递归的思想
+                        if (!System.IO.Directory.Exists(outPath_Mid + "\\fhys"))
+                        {
+                            //创建bhzy文件夹
+                            string bhzyPath = importTool.createFolder(outPath_Mid + "\\fhys");
+                            ////传入参数
+                            getSubLayer(layers, bhzyPath, null, true);  //递归的思想
+                        }
+                        else
+                            Msg("【复合要素】处理完毕，不在重复处理");
+
                     }
 
                 }
@@ -387,8 +399,8 @@ namespace DataConver
                                 layer.Name = fhys + layer.Name;
                             if (plan != null && plan.Contains("方案"))
                             {
-                                if (l.Name.Contains("淹没历时"))
-                                    MessageBox.Show("淹没历时");
+                                //if (l.Name.Contains("淹没历时"))
+                                  // MessageBox.Show("淹没历时");
                                 if (l.FeatureClass.ShapeType == ESRI.ArcGIS.Geometry.esriGeometryType.esriGeometryPolygon)
                                 {
                                     shp2Raster(gp, l.FeatureClass, l.Name, String.Format("{0}\\{1}", ExportPath, layer.Name));
@@ -499,7 +511,7 @@ namespace DataConver
                     object key = split[0];
                     object value = split[1];
                     if (hb.Contains(key))
-                        MessageBox.Show(key.ToString());
+                        MessageBox.Show(key.ToString()+"编码重复，删除一个");
                     hb.Add(key, value);
                 }
                 return hb;
@@ -521,7 +533,7 @@ namespace DataConver
                 selectFeature.out_feature_class = string.Format("{0}\\{1}.shp", SavaFolder, hb[codeValue]);
                 gp.OverwriteOutput = true;
                 gp.Execute(selectFeature, null);
-                Msg(hb[codeValue].ToString() + "转换成功···");
+                Msg(hb[codeValue].ToString() + "-->转换成功");
             }
             catch (Exception ex)
             {
@@ -596,7 +608,7 @@ namespace DataConver
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show("检查‘完整地图.mxd’中数据路径是否可用"+ex.Message);
                 return null;
             }
         }
@@ -618,6 +630,8 @@ namespace DataConver
         private void ExtractFeatureClass(string LayerName, Geoprocessor gp, string aimPath, string sourcePath)
         {
             //Msg("开始处理..." + LayerName);
+            if (sourcePath == null)
+                return;
             try
             {
                 ESRI.ArcGIS.DataManagementTools.CopyFeatures copyFeature = new CopyFeatures();
@@ -628,7 +642,7 @@ namespace DataConver
                 Msg(LayerName + "-->转换完成！");
                 vec_count++;
             }
-            catch (Exception ex)
+            catch
             {
                 //MessageBox.Show(ex.Message);
             }
@@ -658,7 +672,7 @@ namespace DataConver
             }
             catch (Exception ex)
             {
-                //MessageBox.Show(ex.Message);
+                Msg(ex.Message);
             }
         }
 //--------------导入数据-------------------------------------------------------------
@@ -685,7 +699,7 @@ namespace DataConver
                         continue;
                     failedRecord += importTool.ImportShp(sourPath + l1, info);// resultData + "\\" + jcdt.Text);
                     pgrs(++p);
-                    Msg(l1 + "导入成功！");
+                    Msg(l1 + "-->导入成功！");
                 }
                 FileInfo[] tifFile = directoryInfo.GetFiles("*.tif", SearchOption.TopDirectoryOnly);
                 if (IsYmgc)
@@ -701,13 +715,13 @@ namespace DataConver
                 {
 
                     if (IsYmgc)
-                        failedRecord += importTool.ImportTIFF(sourPath + l2 + ".tif", info);
+                        failedRecord += importTool.ImportTIFF(String.Format("{0}{1}.tif", sourPath, l2), info);
                     else
                         failedRecord += importTool.ImportTIFF(sourPath + l2, info);
                     pgrs(q++);
-                    Msg(l2 + "导入成功！");
+                    Msg(l2 + "-->导入成功！");
                 }
-                Msg("导入任务数据总" + (shp.Count + tif.Count).ToString() + "条");//+ "\r\n" + "本次成功导入数据" + importTool.i.ToString() + "条");
+                Msg(String.Format("导入任务数据总{0}条", shp.Count + tif.Count));//+ "\r\n" + "本次成功导入数据" + importTool.i.ToString() + "条");
                 Msg("用时：" + ExecDateDiff(datetime, DateTime.Now));
             }
             catch (Exception ex)
@@ -751,11 +765,16 @@ namespace DataConver
 
             try
             {
-                //创建udb并加密
-                //DatasourceConnectionInfo info = CreatUDB(outPath_Final, "slgc", set.passWod);
-                DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\slgc.udb", outPath_Final) };
-                DataImport("*.shp", "*.tif", outPath_Mid + "\\slgc\\", info,false);
-                wks.Datasources.CloseAll();
+                if (!System.IO.File.Exists(String.Format("{0}\\slgc.udb", outPath_Final)))
+                {
+                    //创建udb并加密
+                    //DatasourceConnectionInfo info = CreatUDB(outPath_Final, "slgc", set.passWod);
+                    DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\slgc.udb", outPath_Final) };
+                    DataImport("*.shp", "*.tif", outPath_Mid + "\\slgc\\", info, false);
+                    wks.Datasources.CloseAll();
+                }
+                else
+                    Msg( "slgc.udb已存在，系统不再重复生成");
             }
             catch (Exception ex)
             {
@@ -767,25 +786,40 @@ namespace DataConver
         {
             try
             {
-                //DatasourceConnectionInfo info = CreatUDB(outPath_Final, "ztdt", set.passWod);
-                DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\ztdt.udb", outPath_Final) };
-                DataImport("*.shp", "*.tif", outPath_Mid + "\\ztdt\\", info,false);
-                wks.Datasources.CloseAll();
+                if (!System.IO.File.Exists(String.Format("{0}\\ztdt.udb", outPath_Final)))
+                {
+                    //DatasourceConnectionInfo info = CreatUDB(outPath_Final, "ztdt", set.passWod);
+                    DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\ztdt.udb", outPath_Final) };
+                    DataImport("*.shp", "*.tif", outPath_Mid + "\\ztdt\\", info, false);
+                    wks.Datasources.CloseAll();
+                }
+                else
+                    Msg("ztdt.udb已存在，系统不再重复生成");
             }
             catch (Exception ex)
             {
                 Msg(ex.Message);
             }
         }
-        //复合要素方案导入
+        
+        /// <summary>
+        /// 复合要素方案导入
+        /// </summary>
+        /// <param name="outPath_Final">结果路径</param>
+        /// <param name="outPath_Mid">中间数据路径</param>
         public void fhysImport(string outPath_Final, string outPath_Mid)
         {
             try
             {
-                //DatasourceConnectionInfo info = CreatUDB(outPath_Final, "ztdt", set.passWod);
-                DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\fhys.udb", outPath_Final) };
-                DataImport("*.shp", "*.tif", outPath_Mid + "\\fhys\\", info,false);
-                wks.Datasources.CloseAll();
+                if (!System.IO.File.Exists(String.Format("{0}\\fhys.udb", outPath_Final)))
+                {
+                    //DatasourceConnectionInfo info = CreatUDB(outPath_Final, "ztdt", set.passWod);
+                    DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\fhys.udb", outPath_Final) };
+                    DataImport("*.shp", "*.tif", outPath_Mid + "\\fhys\\", info, false);
+                    wks.Datasources.CloseAll();
+                }
+                else
+                    Msg("fhys.udb已存在，系统不再重复生成");
             }
             catch (Exception ex)
             {
@@ -802,26 +836,31 @@ namespace DataConver
                 //创建数据源
                 di = new DirectoryInfo(yxfx_path);
                 DirectoryInfo[] yxfxPath = di.GetDirectories("6.3影响分析支撑数据", SearchOption.AllDirectories);
-                DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\yxfx.udb", outPath_Final) };
-                foreach (DirectoryInfo dd in yxfxPath)
+                if (!System.IO.File.Exists(String.Format("{0}\\yxfx.udb", outPath_Final)))
                 {
-                    ////遍历文件夹
-                    FileInfo[] info_file = dd.GetFiles("*.shp", SearchOption.AllDirectories);
-                    max = info_file.Length; int p = 0;
-                    foreach (FileInfo NextFolder in info_file)//"*.shp",
+                    DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\yxfx.udb", outPath_Final) };
+                    foreach (DirectoryInfo dd in yxfxPath)
                     {
+                        ////遍历文件夹
+                        FileInfo[] info_file = dd.GetFiles("*.shp", SearchOption.AllDirectories);
+                        max = info_file.Length; int p = 0;
+                        foreach (FileInfo NextFolder in info_file)//"*.shp",
+                        {
 
-                        mc = NextFolder.Name;
-                        if (mc == "水系面状.shp")
-                            continue;
-                        failedRecord += importTool.ImportShp(String.Format("{0}\\{1}", NextFolder.Directory, mc), info);
-                        pgrs(++p);
-                        Msg(mc + "导入成功！");
+                            mc = NextFolder.Name;
+                            if (mc == "水系面状.shp")
+                                continue;
+                            failedRecord += importTool.ImportShp(String.Format("{0}\\{1}", NextFolder.Directory, mc), info);
+                            pgrs(++p);
+                            Msg(mc + "-->导入成功！");
+                        }
+                        Msg(String.Format("本次成功导入数据{0}条", importTool.i));
+                        Msg("用时：" + ExecDateDiff(datetime, DateTime.Now));
                     }
-                    Msg(String.Format("本次成功导入数据{0}条", importTool.i));
-                    Msg("用时：" + ExecDateDiff(datetime, DateTime.Now));
+                    wks.Datasources.CloseAll();
                 }
-                wks.Datasources.CloseAll();
+                else
+                    Msg("yxfx.udb已存在，系统不再重复生成");
             }
             catch (Exception ex)
             {
@@ -837,22 +876,27 @@ namespace DataConver
                 //创建数据源
                 di = new DirectoryInfo(bhzy_path);
                 DirectoryInfo[] bhzyPath = di.GetDirectories("6.4避洪转移展示支撑数据", SearchOption.AllDirectories);
-                DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\bhzy.udb", outPath_Final) };
-                FileInfo[] info_file = bhzyPath[0].GetFiles("*.shp", SearchOption.AllDirectories);
-                max = info_file.Length;
-                if (max == 0)
-                    return;
-                int p = 0;
-                foreach (FileInfo NextFolder in info_file)//"*.shp",
+                if (!System.IO.File.Exists(String.Format("{0}\\bhzy.udb", outPath_Final)))
                 {
-                    failedRecord += importTool.ImportShp(String.Format("{0}\\{1}", NextFolder.Directory, NextFolder.Name), info);
-                    pgrs(++p);
-                    Msg(NextFolder.Name + "导入成功！");
+                    DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\bhzy.udb", outPath_Final) };
+                    FileInfo[] info_file = bhzyPath[0].GetFiles("*.shp", SearchOption.AllDirectories);
+                    max = info_file.Length;
+                    if (max == 0)
+                        return;
+                    int p = 0;
+                    foreach (FileInfo NextFolder in info_file)//"*.shp",
+                    {
+                        failedRecord += importTool.ImportShp(String.Format("{0}\\{1}", NextFolder.Directory, NextFolder.Name), info);
+                        pgrs(++p);
+                        Msg(NextFolder.Name + "-->导入成功！");
+                    }
+                    Msg(String.Format("本次成功导入数据{0}条", importTool.i));
+                    Msg("用时：" + ExecDateDiff(datetime, DateTime.Now));
+                    //}
+                    wks.Datasources.CloseAll();
                 }
-                Msg(String.Format("本次成功导入数据{0}条", importTool.i));
-                Msg("用时：" + ExecDateDiff(datetime, DateTime.Now));
-                //}
-                wks.Datasources.CloseAll();
+                else
+                    Msg("bhzy.udb已存在，系统不再重复生成");
             }
             catch (Exception ex)
             {
@@ -876,12 +920,17 @@ namespace DataConver
                 {
                     foreach (DirectoryInfo ymgcX in tifDi.GetDirectories())
                     {
+                        if (!System.IO.File.Exists(String.Format("{0}\\{1}.udb", outPath_Final, ymgcX.Name)))
                         //DatasourceConnectionInfo info = CreatUDB(outPath_Final, "ztdt", set.passWod);
                         //string udbName = ymgc_path.Substring(ymgc_path.LastIndexOf("\\") + 1);
-                        DatasourceConnectionInfo info = new DatasourceConnectionInfo();
-                        info.Password = set.passWord;
-                        info.Server = outPath_Final + "\\" + ymgcX.Name + ".udb";
-                        DataImport(" ", "*.tif", ymgcX.FullName + "\\", info, true);
+                        {
+                            DatasourceConnectionInfo info = new DatasourceConnectionInfo();
+                            info.Password = set.passWord;
+                            info.Server = String.Format("{0}\\{1}.udb", outPath_Final, ymgcX.Name);
+                            DataImport(" ", "*.tif", ymgcX.FullName + "\\", info, true);
+                        }
+                        else
+                            Msg(ymgcX.Name+"已存在，系统不再重复生成");
                     }
                     wks.Datasources.CloseAll();
                 }
@@ -904,7 +953,7 @@ namespace DataConver
                     //string bhzyXlName = "bhzyAtrr.csv";
                     foreach (FileInfo xlPath in info_file)
                     {
-                        toCSVStatus = toCSV(String.Format("{0}\\{1}", xlPath.DirectoryName, xlPath.Name), String.Format("{0}\\{1}", xlPath.DirectoryName, csvName));
+                        toCSVStatus = ExcelSheets2csv(String.Format("{0}\\{1}", xlPath.DirectoryName, xlPath.Name),  xlPath.DirectoryName);
                     }
                     if (toCSVStatus)
                     {
@@ -936,7 +985,7 @@ namespace DataConver
                 {
                     failedRecord += importTool.ImportCSV(CSVTargetName, NextFolder.FullName, info);
 
-                    Msg(NextFolder.Name + "导入成功！");
+                    Msg(NextFolder.Name + "-->导入成功！");
                 }
 
 
@@ -1086,8 +1135,10 @@ namespace DataConver
 
         public void ImportMapModel( string wsp, string sources, string symbol)
         {
-
-            CreateWorkspace(wsp, sources, symbol);
+            if (!System.IO.File.Exists(wsp + ".smwu"))
+                CreateWorkspace(wsp, sources, symbol);
+            else
+                Msg("地图工作空间已存在，不再重复创建！");
             try
             {
                 SuperMap.Data.Workspace sWorkspace1 = new SuperMap.Data.Workspace();
@@ -1098,13 +1149,18 @@ namespace DataConver
                 SuperMap.Mapping.Map map = new SuperMap.Mapping.Map(sWorkspace1);
                 DirectoryInfo di = new DirectoryInfo(set.setupPath);
                 DirectoryInfo[] model = di.GetDirectories("MapModel", SearchOption.AllDirectories);
-                DirectoryInfo directory = new DirectoryInfo(set.setupPath);
+                //DirectoryInfo directory = new DirectoryInfo(set.setupPath);
                 FileInfo[] xml = model[0].GetFiles("*.xml");
-                FileInfo[] finfoYmss = directory.GetFiles("*淹没水深*.xml", SearchOption.AllDirectories);
-                FileInfo[] finfoYmls = directory.GetFiles("*淹没历时*.xml", SearchOption.AllDirectories);
-                FileInfo[] finfoDdsj = directory.GetFiles("*到达时间*.xml", SearchOption.AllDirectories);
-                FileInfo[] finfoYmt = directory.GetFiles("*淹没图*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoYmss = di.GetFiles("*淹没水深*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoYmls = di.GetFiles("*淹没历时*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoDdsj = di.GetFiles("*到达时间*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoYmt = di.GetFiles("*淹没图*.xml", SearchOption.AllDirectories);
                 max = xml.Length; int p = 0;
+                if (model.Length <= 0)
+                {
+                    MessageBox.Show("未找到地图模板路径，检查是否安装Reference/MapModel文件夹。");
+                    return;
+                }
                 foreach (FileInfo nn in xml)
                 {
 
@@ -1115,7 +1171,8 @@ namespace DataConver
                     maps.Add(Mapname, Mapxml);
                     //ModelApplication(Mapxml, wsp + ".smwu", nn.Name.Substring(0, nn.Name.Length - 4));
                     pgrs(p++);
-                    Msg(nn.Name + "模板导入成功");
+                    sWorkspace1.Save();
+                    Msg(nn.Name + "模板-->导入成功");
                     if (nn.Name.Contains("jcdt"))
                     {
                         //更新地图
@@ -1131,17 +1188,17 @@ namespace DataConver
                             sWorkspace1.Maps.SetMapXML(Mapname, map.ToXML());
                             sWorkspace1.Save();
                         }
-                        Msg(String.Format("地图{0}更新成功！", Mapname));
+                        Msg(String.Format("地图{0}-->更新成功！", Mapname));
                         for (int i = 0; i < sWorkspace1.Datasources.Count; i++)
                         {
                             string datasourceName = sWorkspace1.Datasources[i].Alias;
-                            if (datasourceName.Contains("ymgc"))
+                            if (datasourceName.Contains("ym"))
                             {
                                 Datasource ds = sWorkspace1.Datasources[i];
                                 string ref_YMSS = finfoYmss[0].FullName;
                                 map = importTool.YMGCrefresModels(ds, map, Mapname, ref_YMSS);
                                 sWorkspace1.Maps.Add(datasourceName, map.ToXML());
-                                Msg(String.Format("地图{0}更新成功！", datasourceName));
+                                Msg(String.Format("地图{0}-->更新成功！", datasourceName));
                                 sWorkspace1.Save();
                             }
                         }
@@ -1191,6 +1248,7 @@ namespace DataConver
         {
             // 创建工作空间，弹出 “关于”对话框
             Msg("正在创建工作空间···");
+            
             SuperMap.Data.Workspace workspace = new SuperMap.Data.Workspace();
             WorkspaceConnectionInfo workspaceConnectionInfo = new WorkspaceConnectionInfo() { Type = WorkspaceType.SMWU, Name = "MapResult", Password = set.passWord };
             String file = wpsPath;
@@ -1229,7 +1287,7 @@ namespace DataConver
                 }
                 Msg("符号库导入成功");
 
-                System.Threading.Thread.Sleep(500);
+               // System.Threading.Thread.Sleep(500);
 
                 di = new DirectoryInfo(sources);
                 FileInfo[] fl = di.GetFiles("*.udb");
@@ -1267,8 +1325,11 @@ namespace DataConver
         //读取txt信息函数  返回一个数组/根据对应的前面数据返回哈希表
         public void readTXT(string txtPath, string shpFilePath, string shpFileName,string cellSize, string SavaPath)
         {
+            string ymgcName = shpFileName.Substring(0,shpFileName.LastIndexOf("."));
             importTool.createFolder(SavaPath);
             IFeatureClass pfeatureClass = shpToFeatureClass(shpFileName, shpFilePath);
+            if (pfeatureClass == null)
+                return;
             Hashtable hs = null;
             List<string> line = new List<string>();
             string l;
@@ -1284,8 +1345,8 @@ namespace DataConver
                         line.Add(split[0]);
                         if (hs != null)
                         {
-                            progressBar.EditValue = lab_progress.Text = "正在生成time" + line[line.Count - 2] + ".tif·····";
-                            Feature2Raster(gp, selectFeatureClass(gp, setValue(pfeatureClass, hs),  importTool.createFolder(SavaPath + "\\shp文件"), "time" + line[line.Count - 2] + ".shp"), cellSize, SavaPath + "\\time" + line[line.Count - 2] + ".tif");
+                            progressBar.EditValue = lab_progress.Text = "正在生成【" + ymgcName + "】：time" + line[line.Count - 2] + ".tif·····";
+                            Feature2Raster(gp, selectFeatureClass(gp, setValue(pfeatureClass, hs), importTool.createFolder(SavaPath + "\\shpFiles"), "time" + line[line.Count - 2] + ".shp"), cellSize, SavaPath + "\\time" + line[line.Count - 2] + ".tif");
                           
                         }
                         hs = new Hashtable();
@@ -1295,8 +1356,8 @@ namespace DataConver
                     object value = split[1];
                     hs.Add(key, value);//将读取的txt数值存入
                 }
-                progressBar.EditValue = lab_progress.Text = "正在生成time" + line[line.Count - 1] + ".tif·····";
-                Feature2Raster(gp, selectFeatureClass(gp, setValue(pfeatureClass, hs), importTool.createFolder(SavaPath + "\\shp文件"), "time" + line[line.Count - 1] + ".shp"), cellSize, SavaPath + "\\time" + line[line.Count - 1] + ".tif");
+                progressBar.EditValue = lab_progress.Text = "正在生成【"+ymgcName+"】：time" + line[line.Count - 1] + ".tif·····";
+                Feature2Raster(gp, selectFeatureClass(gp, setValue(pfeatureClass, hs), importTool.createFolder(SavaPath + "\\shpFiles"), "time" + line[line.Count - 1] + ".shp"), cellSize, SavaPath + "\\time" + line[line.Count - 1] + ".tif");
                 progressBar.EditValue = lab_progress.Text = "淹没过程影像数据生成完成！";
             }
             catch (Exception ex)
@@ -1321,7 +1382,7 @@ namespace DataConver
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Msg(ex.Message);
                 return null;
             }
         }
@@ -1459,7 +1520,7 @@ namespace DataConver
                 ESRI.ArcGIS.ConversionTools.FeatureToRaster feature2Raster = new ESRI.ArcGIS.ConversionTools.FeatureToRaster();
                 feature2Raster.in_features = pFeatrueClass;
                 feature2Raster.field = field;
-               // feature2Raster.cell_size = "";
+              
                 feature2Raster.out_raster = SavaPath + ".tif";
                 gp.OverwriteOutput = true;
                 gp.Execute(feature2Raster, null);
@@ -1483,7 +1544,7 @@ namespace DataConver
         }
         //------------------淹没过程影响数据统计-------------------------------------
         //统计主函数
-        public System.Data.DataTable ymStatistics(string StaShpPath, string czShpLayer)
+        public System.Data.DataTable ymStatistics(string StaShpPath, string czShpLayer,string shpName)
         {
             Hashtable areaStaHs = new Hashtable();
             Hashtable czStaHs = new Hashtable();
@@ -1503,19 +1564,21 @@ namespace DataConver
                 {
                     object keyName = file;//.Name.Substring(0, file.Name.Length - 4);
                     //TimeX.Add(keyName.ToString());
-                    progressBar.EditValue = lab_progress.Text = "正在统计" + file + "·····";
+                    progressBar.EditValue = lab_progress.Text = "正在统计【"+shpName+"】：" + file + "·····";
                     //面积统计
                     //areaSta.Add(Caculate(file.Name, file.DirectoryName, "GRIDAREA"));
                     object AreaValue = Caculate(file, StaShpPath, "GRIDAREA");//单位平方公里
                     areaStaHs.Add(keyName, AreaValue);
                     //村庄统计
                     importTool.createFolder(StaShpPath + "\\czStastic");
-                    IntersectFeature(gp, StaShpPath, file + ".shp", czShpLayer, StaShpPath + "\\czStastic\\ymcz" + file + ".shp");
+                    bool isIntersect=IntersectFeature(gp, StaShpPath, file + ".shp", czShpLayer, StaShpPath + "\\czStastic\\ymcz" + file + ".shp");
+                    if (!isIntersect)
+                        return null;
                     //czSta.Add(caculateCountry(file.DirectoryName + "\\czStastic", "ymcz" + file.Name));
                     object czValue = caculateCountry(StaShpPath + "\\czStastic", "ymcz" + file + ".shp");
                     czStaHs.Add(keyName, czValue);
-                    progressBar.EditValue = lab_progress.Text = "完成统计保存结果";
-                    progressBar.Properties.Stopped = true;
+                    progressBar.EditValue = lab_progress.Text = "正在统计【" + shpName + "】：" + file + "淹没面积：" + AreaValue.ToString()+"平方公里,淹没村庄"+czValue.ToString ()+"个";
+                   // progressBar.Properties.Stopped = true;
                 }
                 //listSort(TimeX);
                 for (int i = 0; i < czStaHs.Count; i++)
@@ -1532,7 +1595,7 @@ namespace DataConver
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show("统计出错，"+ex.Message);
                 return null;
             }
         }
@@ -1621,17 +1684,19 @@ namespace DataConver
             }
         }
         //叠加村庄和淹没时刻数据
-        public void IntersectFeature(Geoprocessor gp, string sourseFeature1, string n1, string sourseFeature2Name, string SavaFeature)
+        public bool IntersectFeature(Geoprocessor gp, string sourseFeature1, string n1, string sourseFeature2Name, string SavaFeature)
         {
             try
             {
                 ESRI.ArcGIS.AnalysisTools.Intersect intersectFeatures = new Intersect() { in_features = String.Format("{0}\\{1};{2}", sourseFeature1, n1, sourseFeature2Name), out_feature_class = SavaFeature, output_type = "POINT" };
                 gp.OverwriteOutput = true;
                 gp.Execute(intersectFeatures, null);
+                return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show("统计叠置出错，"+ex.Message);
+                return false;
             }
         }
         //村庄点计算
@@ -1640,6 +1705,8 @@ namespace DataConver
             try
             {
                 IFeatureClass pFeatureClass = shpToFeatureClass(shpFileName, shpFilePath);
+                if (pFeatureClass == null)
+                    return 0;
                 ITable pTable = (ITable)pFeatureClass;
                 int count = pTable.RowCount(null);
                 return count;
@@ -1647,7 +1714,7 @@ namespace DataConver
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show("村庄统计出错"+ex.Message);
                 return 0;
             }
         }
@@ -1739,6 +1806,46 @@ namespace DataConver
                 return null;
             }
         }
+        public bool ExcelSheets2csv(string SourceExcelPathAndName, string targetCSVPathAndName)
+        {
+            Microsoft.Office.Interop.Excel.Application OXL = new Microsoft.Office.Interop.Excel.Application();
+            Microsoft.Office.Interop.Excel.Workbook xlWorkBook = OXL.Workbooks.Open(SourceExcelPathAndName);
+            try
+            {
+                
+                OXL.Visible = false;
+                foreach (Microsoft.Office.Interop.Excel.Worksheet sht in xlWorkBook.Worksheets)
+                {
+                    sht.Select();
+                    string name = sht.Name;
+                    Microsoft.Office.Interop.Excel.Range range = sht.UsedRange.get_Range("A1", Type.Missing).EntireRow;
+                    range.Delete(XlDeleteShiftDirection.xlShiftUp);
+                    xlWorkBook.SaveAs(targetCSVPathAndName + "\\ywcx" + name + ".csv", Microsoft.Office.Interop.Excel.XlFileFormat.xlCSV, Microsoft.Office.Interop.Excel.XlSaveAsAccessMode.xlNoChange);
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if (xlWorkBook != null)
+                {
+                    xlWorkBook.Close(Type.Missing, Type.Missing, Type.Missing);
+                    xlWorkBook = null;
+                }
+                if (OXL != null)
+                    OXL.Quit();
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(OXL);
+                if (OXL != null)
+                    OXL = null;
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+            }
+        }
         //excel转csv
         public bool ExcelToCsv(string SourceExcelPathAndName, string targetCSVPathAndName, string excelSheetName, string columnDelimeter, int headerRowsToSkip)
         {
@@ -1771,7 +1878,7 @@ namespace DataConver
                 return true;
 
             }
-            catch (Exception ex)
+            catch
             {
                 Msg("属性表导入错误！···");
                 return false;

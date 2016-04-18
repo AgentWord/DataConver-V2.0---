@@ -6,24 +6,24 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using SuperMapTool;
+using SuperMap;
 using System.IO;
 
 namespace DataConver
 {
     public partial class Tiff : Form
     {
-        private ImportTool importTool;//定义工具类
+        private SuperMapTool importTool;//定义工具类
         private DataConver.DataConverTool dct;
         private string savaPathInitialize;
-        private string shpTrueName;
+        
         //private ESRI.ArcGIS.Geoprocessor.Geoprocessor gp = new ESRI.ArcGIS.Geoprocessor.Geoprocessor();
         public Tiff(string outPut_Path)
         {
             InitializeComponent();
             this.savaPathInitialize = outPut_Path;
             SuperMap.Data.Workspace m_workspace = new SuperMap.Data.Workspace();
-            importTool = new ImportTool(m_workspace);
+            importTool = new SuperMapTool(m_workspace);
             dct = new DataConverTool(this.ExtractMesg, null, this.progressView, null, null);
             this.progressView.Properties.Stopped = true;
             SavaFolder.Text = savaPathInitialize;
@@ -38,7 +38,7 @@ namespace DataConver
                 DateTime dt = DateTime.Now;
                 but_tif.Text = "正在处理中";
                 but_tif.Enabled= false;
-                
+                int i = 0;
                 this.progressView.Properties.Stopped = false;
                 DirectoryInfo dir = new DirectoryInfo(savaPathInitialize);
                 DirectoryInfo[] ymssDir = dir.GetDirectories("*淹没过程动态展示支撑数据", SearchOption.AllDirectories);
@@ -47,31 +47,31 @@ namespace DataConver
                     MessageBox.Show("没有找到对应数据文件夹，请检查文件命名");
                     return;
                 }
-                FileInfo[] Refershp = ymssDir[0].GetFiles("ymgc*.shp", SearchOption.TopDirectoryOnly);
+                FileInfo[] Refershp = ymssDir[0].GetFiles("ym*.shp", SearchOption.TopDirectoryOnly);
                 FileInfo[] ReferCzLayer = ymssDir[0].GetFiles("xzLayer.shp", SearchOption.AllDirectories);
-                
+                if(Refershp.Length<=0||ReferCzLayer.Length<=0)
+                {
+                    MessageBox.Show("请检查是否存在数据xzLayer.shp、ymss数据");
+                    return;
+                }
                 foreach (FileInfo shp in Refershp)
                 {
                     IsAnalysis = false;
+                    jindu.Text += String.Format("{0}/{1}", i++, Refershp.Length);
                     string shpfilePath = shp.DirectoryName;//shp.FullName.Substring(0, shp.FullName.LastIndexOf("\\"));
                     string shpFileName = shp.Name;//ReferShp.Text.Substring(ReferShp.Text.LastIndexOf("\\") + 1);
                     string shpTrueName = shpFileName.Substring(0, shpFileName.Length - 4);
-                    string txtFile = String.Format("ymgc{0}.txt", shpTrueName.Substring(4));
+                    string txtFile = String.Format("{0}.txt", shpTrueName);
                     if (checkFile(String.Format("{0}\\{1}", shpfilePath, txtFile)))
                     {
                         if (!System.IO.Directory.Exists(String.Format("{0}\\tiffPath\\{1}", SavaFolder.Text, shpTrueName)))
                         {
                             dct.readTXT(String.Format("{0}\\{1}", shpfilePath, txtFile), shpfilePath, shpFileName, CellSize.Text, String.Format("{0}\\tiffPath\\{1}", SavaFolder.Text, shpTrueName));
-                            if (!System.IO.Directory.Exists(String.Format("{0}\\tiffPath\\{1}\\shp文件\\czStastic", SavaFolder.Text, shpTrueName)))
-                            {
-                                if (ReferCzLayer.Length <= 0)
-                                {
-                                    MessageBox.Show("未找到存庄数据，请检查数据是否存在或命名是否为xzLayer.shp");
-                                    return;
-                                }
-                                CzLayer.Text = ReferCzLayer[0].FullName;
-                                dct.ymStatistics(String.Format("{0}\\tiffPath\\{1}\\shp文件", SavaFolder.Text, shpTrueName), ReferCzLayer[0].FullName);
-                            }
+                        }
+                        if (!System.IO.Directory.Exists(String.Format("{0}\\tiffPath\\{1}\\shpFiles\\czStastic", SavaFolder.Text, shpTrueName)))
+                        {
+                           // CzLayer.Text = ReferCzLayer[0].FullName;
+                            //dct.ymStatistics(String.Format("{0}\\tiffPath\\{1}\\shpFiles", SavaFolder.Text, shpTrueName), ReferCzLayer[0].FullName, shpTrueName);
                         }
                         else
                         {
@@ -82,11 +82,13 @@ namespace DataConver
                 
                 }
                 this.progressView.Properties.Stopped = true;
+                but_tif.Text = "处理淹没过程";
                 but_tif.Enabled =  true;
                 if (IsAnalysis)
                     MessageBox.Show("已存淹没过程！");
                 else
                     MessageBox.Show("生成淹没过程完成！用时：" + dct.ExecDateDiff(dt, DateTime.Now));
+                ExtractMesg.Text = "结束。";
 
                
             }

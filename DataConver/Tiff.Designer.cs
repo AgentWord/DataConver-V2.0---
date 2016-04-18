@@ -46,6 +46,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.textBoxX1 = new DevComponents.DotNetBar.Controls.TextBoxX();
+            this.jindu = new DevComponents.DotNetBar.LabelX();
             this.panelEx1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.progressView.Properties)).BeginInit();
             this.SuspendLayout();
@@ -54,6 +55,7 @@
             // 
             this.panelEx1.CanvasColor = System.Drawing.SystemColors.Control;
             this.panelEx1.ColorSchemeStyle = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
+            this.panelEx1.Controls.Add(this.jindu);
             this.panelEx1.Controls.Add(this.CellSize);
             this.panelEx1.Controls.Add(this.labelX1);
             this.panelEx1.Controls.Add(this.checkBoxX1);
@@ -188,7 +190,7 @@
             // 
             // 
             this.ExtractMesg.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.ExtractMesg.Location = new System.Drawing.Point(3, 209);
+            this.ExtractMesg.Location = new System.Drawing.Point(3, 220);
             this.ExtractMesg.Name = "ExtractMesg";
             this.ExtractMesg.Size = new System.Drawing.Size(489, 33);
             this.ExtractMesg.TabIndex = 37;
@@ -262,6 +264,18 @@
             this.textBoxX1.TabIndex = 46;
             this.textBoxX1.Text = "默认值";
             // 
+            // jindu
+            // 
+            // 
+            // 
+            // 
+            this.jindu.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.jindu.Location = new System.Drawing.Point(3, 194);
+            this.jindu.Name = "jindu";
+            this.jindu.Size = new System.Drawing.Size(103, 23);
+            this.jindu.TabIndex = 53;
+            this.jindu.Text = "处理进度：";
+            // 
             // Tiff
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -298,5 +312,6 @@
         private DevComponents.Editors.ComboItem comboItem2;
         private DevComponents.Editors.ComboItem comboItem3;
         private DevComponents.DotNetBar.LabelX CzLayer;
+        private DevComponents.DotNetBar.LabelX jindu;
     }
 }

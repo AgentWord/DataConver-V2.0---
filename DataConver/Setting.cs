@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using SuperMapTool;
+using SuperMap;
 using System.Configuration;
 using System.Reflection;
 
@@ -25,7 +25,7 @@ namespace DataConver
         public string CoorRef;
         public string passWord="admin";
         public string ztdt_ref;
-        private ImportTool importTool;//定义工具类
+        private SuperMapTool importTool;//定义工具类
         private ExeConfigurationFileMap file;
         private Configuration config1;
         private ConfigSectionData data1;
@@ -35,7 +35,7 @@ namespace DataConver
             file = new ExeConfigurationFileMap();
             InitializeComponent();
             SuperMap.Data.Workspace m_workspace = new SuperMap.Data.Workspace();
-            importTool = new ImportTool(m_workspace);
+            importTool = new SuperMapTool(m_workspace);
             file.ExeConfigFilename = "setting.config";
            
             strAssemblyFilePath = Assembly.GetExecutingAssembly().Location;

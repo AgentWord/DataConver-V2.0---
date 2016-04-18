@@ -1,31 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Diagnostics;
-using System.Drawing;
 using System.Windows.Forms;
 using SuperMap.Data;
-using SuperMap.UI;
 using SuperMap.Data.Conversion;
 using SuperMap.Mapping;
-using SuperMap.Layout;
 using System.IO;
 using System.Data.OleDb;
 using System.Data;
 
 
-using ESRI.ArcGIS.AnalysisTools;
-using ESRI.ArcGIS.DataSourcesGDB;
 using ESRI.ArcGIS.DataSourcesFile;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.DataManagementTools;
-using ESRI.ArcGIS.Carto;
 using ESRI.ArcGIS.Geoprocessor;
-using ESRI.ArcGIS.Geoprocessing;
-using DataConver;
-namespace SuperMapTool
+namespace SuperMap
 {
-    public class ImportTool
+    public class SuperMapTool
     {
         private SuperMap.Data.Workspace m_workspace;//定义超图工作空间
         private DataImport m_dataImport;//定义超图数据导入类
@@ -35,7 +26,7 @@ namespace SuperMapTool
         /// <summary>
         /// 初始化
         /// </summary>
-        public ImportTool(SuperMap.Data.Workspace workspace)
+        public SuperMapTool(SuperMap.Data.Workspace workspace)
         {
             m_workspace = workspace;
             m_dataImport = new DataImport();

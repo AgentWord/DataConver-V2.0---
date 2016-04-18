@@ -219,7 +219,7 @@
             this.barButtonItem6,
             this.barButtonItem7});
             this.ribbonControl1.Location = new System.Drawing.Point(0, 0);
-            this.ribbonControl1.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.ribbonControl1.Margin = new System.Windows.Forms.Padding(5);
             this.ribbonControl1.MaxItemId = 78;
             this.ribbonControl1.Name = "ribbonControl1";
             this.ribbonControl1.Pages.AddRange(new DevExpress.XtraBars.Ribbon.RibbonPage[] {
@@ -682,7 +682,7 @@
             this.but_back.Font = new System.Drawing.Font("黑体", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.but_back.Location = new System.Drawing.Point(20, 5);
             this.but_back.Name = "but_back";
-            this.but_back.Size = new System.Drawing.Size(98, 23);
+            this.but_back.Size = new System.Drawing.Size(128, 23);
             this.but_back.TabIndex = 6;
             this.but_back.Text = "返回上一级";
             this.but_back.UseVisualStyleBackColor = true;
@@ -691,9 +691,9 @@
             // but_openDir
             // 
             this.but_openDir.Font = new System.Drawing.Font("黑体", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.but_openDir.Location = new System.Drawing.Point(163, 5);
+            this.but_openDir.Location = new System.Drawing.Point(172, 5);
             this.but_openDir.Name = "but_openDir";
-            this.but_openDir.Size = new System.Drawing.Size(90, 23);
+            this.but_openDir.Size = new System.Drawing.Size(112, 23);
             this.but_openDir.TabIndex = 5;
             this.but_openDir.Text = "打开目录";
             this.but_openDir.UseVisualStyleBackColor = true;
@@ -734,7 +734,7 @@
             this.Pag_ProcessedData.Controls.Add(this.Lis_DealData);
             this.Pag_ProcessedData.Image = ((System.Drawing.Image)(resources.GetObject("Pag_ProcessedData.Image")));
             this.Pag_ProcessedData.Name = "Pag_ProcessedData";
-            this.Pag_ProcessedData.Size = new System.Drawing.Size(222, 426);
+            this.Pag_ProcessedData.Size = new System.Drawing.Size(287, 387);
             this.Pag_ProcessedData.Text = "已处理编制单元";
             // 
             // but_deal_back
@@ -742,7 +742,7 @@
             this.but_deal_back.Font = new System.Drawing.Font("黑体", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.but_deal_back.Location = new System.Drawing.Point(20, 5);
             this.but_deal_back.Name = "but_deal_back";
-            this.but_deal_back.Size = new System.Drawing.Size(98, 23);
+            this.but_deal_back.Size = new System.Drawing.Size(125, 23);
             this.but_deal_back.TabIndex = 8;
             this.but_deal_back.Text = "返回上一级";
             this.but_deal_back.UseVisualStyleBackColor = true;
@@ -753,7 +753,7 @@
             this.but_deal_openDir.Font = new System.Drawing.Font("黑体", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.but_deal_openDir.Location = new System.Drawing.Point(163, 5);
             this.but_deal_openDir.Name = "but_deal_openDir";
-            this.but_deal_openDir.Size = new System.Drawing.Size(90, 23);
+            this.but_deal_openDir.Size = new System.Drawing.Size(121, 23);
             this.but_deal_openDir.TabIndex = 7;
             this.but_deal_openDir.Text = "打开目录";
             this.but_deal_openDir.UseVisualStyleBackColor = true;
@@ -763,9 +763,9 @@
             // 
             this.Lis_DealData.BackColor = System.Drawing.Color.Gainsboro;
             this.Lis_DealData.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.Lis_DealData.Location = new System.Drawing.Point(0, 71);
+            this.Lis_DealData.Location = new System.Drawing.Point(0, 32);
             this.Lis_DealData.Name = "Lis_DealData";
-            this.Lis_DealData.Size = new System.Drawing.Size(222, 355);
+            this.Lis_DealData.Size = new System.Drawing.Size(287, 355);
             this.Lis_DealData.TabIndex = 2;
             this.Lis_DealData.UseCompatibleStateImageBehavior = false;
             this.Lis_DealData.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.Deal_Data_MouseDoubleClick);
@@ -848,7 +848,7 @@
             this.but_Start.Font = new System.Drawing.Font("黑体", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.but_Start.Location = new System.Drawing.Point(361, 149);
             this.but_Start.Name = "but_Start";
-            this.but_Start.Size = new System.Drawing.Size(82, 30);
+            this.but_Start.Size = new System.Drawing.Size(142, 30);
             this.but_Start.TabIndex = 34;
             this.but_Start.Text = "开始处理";
             this.but_Start.UseVisualStyleBackColor = true;
@@ -857,9 +857,9 @@
             // but_Cancel
             // 
             this.but_Cancel.Font = new System.Drawing.Font("黑体", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.but_Cancel.Location = new System.Drawing.Point(263, 149);
+            this.but_Cancel.Location = new System.Drawing.Point(209, 149);
             this.but_Cancel.Name = "but_Cancel";
-            this.but_Cancel.Size = new System.Drawing.Size(82, 30);
+            this.but_Cancel.Size = new System.Drawing.Size(122, 30);
             this.but_Cancel.TabIndex = 33;
             this.but_Cancel.Text = "取消";
             this.but_Cancel.UseVisualStyleBackColor = true;
@@ -868,9 +868,9 @@
             // but_password
             // 
             this.but_password.Font = new System.Drawing.Font("黑体", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.but_password.Location = new System.Drawing.Point(165, 149);
+            this.but_password.Location = new System.Drawing.Point(36, 149);
             this.but_password.Name = "but_password";
-            this.but_password.Size = new System.Drawing.Size(82, 30);
+            this.but_password.Size = new System.Drawing.Size(132, 30);
             this.but_password.TabIndex = 32;
             this.but_password.Text = "设置密码";
             this.but_password.UseVisualStyleBackColor = true;
@@ -998,7 +998,7 @@
             // 
             this.Pag_Map.Controls.Add(this.axMapControl1);
             this.Pag_Map.Name = "Pag_Map";
-            this.Pag_Map.Size = new System.Drawing.Size(593, 426);
+            this.Pag_Map.Size = new System.Drawing.Size(528, 387);
             this.Pag_Map.Text = "地图图层数据";
             // 
             // axMapControl1
@@ -1007,7 +1007,7 @@
             this.axMapControl1.Location = new System.Drawing.Point(0, 0);
             this.axMapControl1.Name = "axMapControl1";
             this.axMapControl1.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("axMapControl1.OcxState")));
-            this.axMapControl1.Size = new System.Drawing.Size(593, 426);
+            this.axMapControl1.Size = new System.Drawing.Size(528, 387);
             this.axMapControl1.TabIndex = 0;
             this.axMapControl1.OnMouseDown += new ESRI.ArcGIS.Controls.IMapControlEvents2_Ax_OnMouseDownEventHandler(this.axMapControl1_OnMouseDown);
             // 

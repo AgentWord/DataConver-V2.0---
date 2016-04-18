@@ -5,7 +5,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 
-using SuperMapTool;
+using SuperMap;
 
 using System.Threading;
 
@@ -17,15 +17,14 @@ namespace DataConver
        
         public string userName;
         private SuperMap.Data.Workspace m_workspace;
-        private ImportTool importTool;
+        private SuperMapTool importTool;
         public string Undeal_heduanX;
         private string Undeal_heduan;
         private string Deal_heduanX;
         private string Deal_heduan;
         
         private Setting set = new Setting();
-        private int vec_count = 0;//矢量数据处理计数
-        private int ras_count = 0;//栅格数据处理计数
+      
         private const string TIFFPath = "";
         private List<string> list = new List<string>();
         private string undeal_Path = "";
@@ -40,7 +39,7 @@ namespace DataConver
             InitializeComponent();
          
           
-            importTool = new ImportTool(m_workspace);
+            importTool = new SuperMapTool(m_workspace);
             listviewSet(Lis_UndealData);
             listviewSet(Lis_DealData);
             DataManager();
@@ -173,7 +172,7 @@ namespace DataConver
 
 
             }
-            catch (Exception ex)
+            catch 
             {
                 //MessageBox.Show("已是主目录");
                 //Pag_UndealData.Text = set.undeal_Path;
@@ -214,7 +213,7 @@ namespace DataConver
               
 
             }
-            catch (Exception ex)
+            catch
             {
                 MessageBox.Show("已是主目录");
                 //Pag_ProcessMsg.Text = set.deal_path;
@@ -272,7 +271,10 @@ namespace DataConver
                 else
                 {
                     if (MessageBox.Show("确定要删除文件：" + Lis_UndealData.FocusedItem.Text, "询问", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                    {
+                        deleteFiles(String.Format("{0}\\{1}", Undeal_heduanX, Lis_UndealData.FocusedItem.Text));
                         Lis_UndealData.FocusedItem.Remove();
+                    }
                     else
                         return;
                 }
@@ -457,8 +459,7 @@ namespace DataConver
         private void but_Start_Click(object sender, EventArgs e)
         {
             bool IsSuccessful = false;
-            vec_count = 0;
-            ras_count = 0;
+            
             this.but_Start.Enabled = false;
             this.but_Start.Text = "正在处理";
             MessageShow.Clear();
