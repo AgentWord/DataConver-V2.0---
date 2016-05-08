@@ -38,7 +38,7 @@ namespace DataConver
                 DateTime dt = DateTime.Now;
                 but_tif.Text = "正在处理中";
                 but_tif.Enabled= false;
-                int i = 0;
+                int i = 1;
                 this.progressView.Properties.Stopped = false;
                 DirectoryInfo dir = new DirectoryInfo(savaPathInitialize);
                 DirectoryInfo[] ymssDir = dir.GetDirectories("*淹没过程动态展示支撑数据", SearchOption.AllDirectories);
@@ -57,7 +57,7 @@ namespace DataConver
                 foreach (FileInfo shp in Refershp)
                 {
                     IsAnalysis = false;
-                    jindu.Text += String.Format("{0}/{1}", i++, Refershp.Length);
+                    jindu.Text = String.Format("处理进度：{0}/{1}", i++, Refershp.Length);
                     string shpfilePath = shp.DirectoryName;//shp.FullName.Substring(0, shp.FullName.LastIndexOf("\\"));
                     string shpFileName = shp.Name;//ReferShp.Text.Substring(ReferShp.Text.LastIndexOf("\\") + 1);
                     string shpTrueName = shpFileName.Substring(0, shpFileName.Length - 4);

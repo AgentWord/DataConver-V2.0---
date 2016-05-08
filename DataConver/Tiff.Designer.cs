@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.panelEx1 = new DevComponents.DotNetBar.PanelEx();
+            this.jindu = new DevComponents.DotNetBar.LabelX();
             this.CellSize = new DevComponents.DotNetBar.Controls.ComboBoxEx();
             this.comboItem1 = new DevComponents.Editors.ComboItem();
             this.comboItem2 = new DevComponents.Editors.ComboItem();
@@ -46,7 +47,6 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.textBoxX1 = new DevComponents.DotNetBar.Controls.TextBoxX();
-            this.jindu = new DevComponents.DotNetBar.LabelX();
             this.panelEx1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.progressView.Properties)).BeginInit();
             this.SuspendLayout();
@@ -82,6 +82,17 @@
             this.panelEx1.Style.ForeColor.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.PanelText;
             this.panelEx1.Style.GradientAngle = 90;
             this.panelEx1.TabIndex = 9;
+            // 
+            // jindu
+            // 
+            // 
+            // 
+            // 
+            this.jindu.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.jindu.Location = new System.Drawing.Point(3, 194);
+            this.jindu.Name = "jindu";
+            this.jindu.Size = new System.Drawing.Size(103, 23);
+            this.jindu.TabIndex = 53;
             // 
             // CellSize
             // 
@@ -263,18 +274,6 @@
             this.textBoxX1.Size = new System.Drawing.Size(98, 21);
             this.textBoxX1.TabIndex = 46;
             this.textBoxX1.Text = "默认值";
-            // 
-            // jindu
-            // 
-            // 
-            // 
-            // 
-            this.jindu.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.jindu.Location = new System.Drawing.Point(3, 194);
-            this.jindu.Name = "jindu";
-            this.jindu.Size = new System.Drawing.Size(103, 23);
-            this.jindu.TabIndex = 53;
-            this.jindu.Text = "处理进度：";
             // 
             // Tiff
             // 

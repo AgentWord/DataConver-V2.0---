@@ -53,7 +53,7 @@ namespace SuperMap
                 ImportResult dd = import1.Run();
                 i++;
                 if (dd.FailedSettings.Length != 0)
-                    return "【shp数据导入】" + name + "导入失败！请检查数据是否含有有效记录。\t\n";
+                    return "【shp数据导入】" + name + "导入失败！请检查数据属性记录是否为空。\t\n";
                 return null;
             }
             catch (Exception ex)
@@ -76,7 +76,7 @@ namespace SuperMap
                 import1.ImportSettings.Add(importSettingCSV);
                 ImportResult dd = import1.Run();//.GetSucceedDatasetNames(importSettingCSV);
                 if (dd.FailedSettings.Length != 0)
-                    return "【属性表导入】" + targetName + "导入失败！请检查数据是否含有有效记录。\t\n";
+                    return "【属性表导入】" + targetName + "导入失败！请检查数据属性记录是否为空。\t\n";
                 return null;
             }
             catch (Exception ex)
@@ -342,14 +342,15 @@ namespace SuperMap
                 MessageBox.Show(ex.Message);
             }
         }
-        public SuperMap.Mapping.Map refresModels(Datasource ds, SuperMap.Mapping.Map map, string Mapname, string ref_YMSS, string ref_YMLS, string ref_DDSJ, string ref_YMT)
-        {
-            try
-            {
+        public SuperMap.Mapping.Map refresModels(Datasource ds1, SuperMap.Mapping.Map map, string Mapname, string ref_YMSS, string ref_YMLS, string ref_DDSJ, string ref_YMT,string ref_JSK,string ref_JSKX,string ref_Fxqh,string  ref_Ymfw )
+        {                                                                                                                                                                    
+            try                                                                                                                                                              
+            {                                                                                                                                                               
 
-                int con = ds.Datasets.Count;
+                int con = ds1.Datasets.Count;
                 map.Open(Mapname);
                 Layers layers = map.Layers;
+
                 ThemeGridRange tgrYMSS = new ThemeGridRange();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
                 tgrYMSS.FromXML(readXML(ref_YMSS));
                 ThemeGridRange tgrYMLS = new ThemeGridRange();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
@@ -358,14 +359,25 @@ namespace SuperMap
                 tgrDDSJ.FromXML(readXML(ref_DDSJ));
                 ThemeGridRange tgrYMT = new ThemeGridRange();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
                 tgrYMT.FromXML(readXML(ref_YMT));
-                ThemeGridRange tgr = new ThemeGridRange();
+                ThemeUnique tgrJSK = new ThemeUnique();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
+                tgrJSK.FromXML(readXML(ref_JSK));
+                ThemeUnique tgrJSKX = new ThemeUnique();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
+                tgrJSKX.FromXML(readXML(ref_JSKX));
+                ThemeUnique tgrFxqh = new ThemeUnique();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
+                tgrFxqh.FromXML(readXML(ref_Fxqh));
+                tgrFxqh.UniqueExpression = "Code";
+                ThemeUnique tgrYmfw = new ThemeUnique();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
+                tgrYmfw.FromXML(readXML(ref_Ymfw));
+                tgrYmfw.UniqueExpression = "Code";
+                ThemeGridRange tgrGrid = new ThemeGridRange();
+                ThemeUnique tgrUnion = new ThemeUnique();
                 bool IsContains = false;
                 //搜寻数据源中的每个数据集是不是存在地图中
                 for (int i = 0; i < con; i++)
                 {
                     for (int j = 0; j < layers.Count; j++)
                     {
-                        if (layers[j].Name.Contains(ds.Datasets[i].Name))
+                        if (layers[j].Name.Contains(ds1.Datasets[i].Name))
                         { //if (layers.Contains(ds.Datasets[i].Name))//ds.Datasets.Contains(layers[i].Name)
                             IsContains = true;
                             break;//结束内循环否则将该数据集加入图层中
@@ -373,25 +385,44 @@ namespace SuperMap
                     }
                     if (!IsContains)
                     {
-                        if (ds.Datasets[i].Type == DatasetType.Point || ds.Datasets[i].Type == DatasetType.Line)
+                        if (ds1.Datasets[i].Type == DatasetType.Point || ds1.Datasets[i].Type == DatasetType.Line||ds1.Datasets[i].Type == DatasetType.Region)
                         {
-                            Layer layerVector = map.Layers.Insert(layers.Count, ds.Datasets[i]);
+                            Layer layerVector = null;
+                            if (ds1.Datasets[i].Name.Contains("进水口线"))
+                            {
+                                tgrUnion = tgrJSKX;
+                                layerVector = map.Layers.Add(ds1.Datasets[i], tgrJSKX, false);
+                            }
+                            else if (ds1.Datasets[i].Name.Contains("进水口"))
+                            {
+                              
+                                layerVector = map.Layers.Add(ds1.Datasets[i], tgrJSK, false);
+                            }else if (ds1.Datasets[i].Name.Contains("风险区划"))
+                            {
+
+                                layerVector = map.Layers.Add(ds1.Datasets[i], tgrFxqh, false);
+                            }else if (ds1.Datasets[i].Name.Contains("淹没范围"))
+                            {
+                                
+                                layerVector = map.Layers.Add(ds1.Datasets[i], tgrYmfw, false);
+                            }else
+                               layerVector = map.Layers.Add(ds1.Datasets[i],false);//添加至最底层
                             layerVector.IsVisible = false;
-                            layerVector.Caption = ds.Datasets[i].Name;
+                            layerVector.Caption = ds1.Datasets[i].Name;
                         }
                         else
                         {
-                            if (ds.Datasets[i].Name.Contains("淹没水深"))
-                                tgr = tgrYMSS;
-                            if (ds.Datasets[i].Name.Contains("淹没历时"))
-                                tgr = tgrYMLS;
-                            if (ds.Datasets[i].Name.Contains("到达时间"))
-                                tgr = tgrDDSJ;
-                            if (ds.Datasets[i].Name.Contains("淹没图"))
-                                tgr = tgrYMT;
-                            Layer layerGrid = map.Layers.Insert(layers.Count, (DatasetGrid)ds.Datasets[i], tgr);
+                            if (ds1.Datasets[i].Name.Contains("淹没水深"))
+                                tgrGrid = tgrYMSS;
+                            if (ds1.Datasets[i].Name.Contains("淹没历时"))
+                                tgrGrid = tgrYMLS;
+                            if (ds1.Datasets[i].Name.Contains("到达时间"))
+                                tgrGrid = tgrDDSJ;
+                            if (ds1.Datasets[i].Name.Contains("淹没图"))
+                                tgrGrid = tgrYMT;
+                            Layer layerGrid = map.Layers.Add((DatasetGrid)ds1.Datasets[i], tgrGrid,false);
                             layerGrid.IsVisible = false;
-                            layerGrid.Caption = ds.Datasets[i].Name;
+                            layerGrid.Caption = ds1.Datasets[i].Name;
                         }
                     }
                     IsContains = false;
@@ -406,6 +437,87 @@ namespace SuperMap
             }
 
         }
+        //分模块更新地图
+        public SuperMap.Mapping.Map refresModelsBhzy(Datasource ds1, SuperMap.Mapping.Map map, string Mapname, string ref_YMSS, string ref_JSK, string ref_JSKX)//ref_Country, ref_JSK, ref_JSKX
+        {
+            try
+            {
+
+                int con = ds1.Datasets.Count;
+                map.Open(Mapname);
+                Layers layers = map.Layers;
+                ThemeGridRange tgrYMSS = new ThemeGridRange();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
+                tgrYMSS.FromXML(readXML(ref_YMSS));
+                // ThemeGridRange tgrYMLS = new ThemeGridRange();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
+                //tgrYMLS.FromXML(readXML(ref_YMLS));
+                //Theme
+                ThemeUnique tgrJSK = new ThemeUnique();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
+                tgrJSK.FromXML(readXML(ref_JSK));
+                ThemeUnique tgrJSKX = new ThemeUnique();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
+                tgrJSKX.FromXML(readXML(ref_JSKX));
+                ThemeUnique tgr = new ThemeUnique();
+                bool IsContains = false;
+                //搜寻数据源中的每个数据集是不是存在地图中
+                for (int i = 0; i < con; i++)
+                {
+                    for (int j = 0; j < layers.Count; j++)
+                    {
+                        if (layers[j].Name.Contains(ds1.Datasets[i].Name))
+                        { //if (layers.Contains(ds.Datasets[i].Name))//ds.Datasets.Contains(layers[i].Name)
+                            IsContains = true;
+                            break;//结束内循环  否则将该数据集加入图层中
+                        }
+                    }
+                    if (!IsContains)
+                    {
+                        
+                            
+                        if (ds1.Datasets[i].Type == DatasetType.Point || ds1.Datasets[i].Type == DatasetType.Line)
+                        {
+                            Layer layerVector = null;
+                            if (ds1.Datasets[i].Name.Contains("进水口线"))
+                            {
+                                tgr = tgrJSKX;
+                                layerVector = map.Layers.Add(ds1.Datasets[i], tgr, false);
+                            }
+                            else if (ds1.Datasets[i].Name.Contains("进水口"))
+                            {
+                                tgr = tgrJSK;
+                                layerVector = map.Layers.Add(ds1.Datasets[i], tgr, false);
+                            }else
+                             layerVector = map.Layers.Add(ds1.Datasets[i], false);//添加至最底层
+                            layerVector.IsVisible = false;
+                            layerVector.Caption = ds1.Datasets[i].Name;
+                        }
+                        else if (ds1.Datasets[i].Type != DatasetType.Tabular)
+                        {
+                            Layer layerGrid = null;
+                            if (ds1.Datasets[i].Name.Contains("淹没水深"))
+                            {
+
+                                layerGrid = map.Layers.Add((DatasetGrid)ds1.Datasets[i], tgrYMSS, false);
+                            }
+
+                            //if (ds1.Datasets[i].Name.Contains("淹没历时"))
+                            //    tgr = tgrYMLS;
+                           
+                            layerGrid.IsVisible = false;
+                            layerGrid.Caption = ds1.Datasets[i].Name;
+                        }
+                    }
+                    IsContains = false;
+                    map.Refresh();
+                }
+                return map;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null;
+            }
+
+        }
+       
         public SuperMap.Mapping.Map YMGCrefresModels(Datasource ds, SuperMap.Mapping.Map map, string Mapname, string ref_YMSS)
         {
             try
@@ -433,7 +545,35 @@ namespace SuperMap
             }
 
         }
-        
+        public SuperMap.Mapping.Map addCollectData2Maps(Datasource ds, SuperMap.Mapping.Map map, string Mapname)
+        {
+            try
+            {
+
+                int con = ds.Datasets.Count;
+                if (con <= 0)
+                    return null;
+                map.Open(Mapname);
+                Layers layers = map.Layers;
+               // ThemeGridRange tgrYMSS = new ThemeGridRange();//需要加载四种模板 淹没水深、淹没历时、到达时间、淹没图
+                //tgrYMSS.FromXML(readXML(ref_YMSS));
+                //搜寻数据源中的每个数据集是不是存在地图中
+                for (int i = 0; i < con; i++)
+                {
+                    Layer layer = map.Layers.Add(ds.Datasets[i],true);//添加至地图顶端
+                    layer.IsVisible = true;
+                    layer.Caption = ds.Datasets[i].Name;
+                    map.Refresh();
+                }
+                return map;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null;
+            }
+
+        }
         
         /// <summary>
         /// 得到指定目录下所有  文件夹   的名称列表

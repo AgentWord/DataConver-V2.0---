@@ -22,7 +22,7 @@ using SuperMap;
 
 namespace DataConver
 {
-    class DataConverTool
+   public  class DataConverTool
     {
         
        // private AxMapControl axMapControl = null;
@@ -44,6 +44,8 @@ namespace DataConver
         int max=0;
         AxMapControl axMapControl = null;
         private string fhys = null;
+        private string Bhzy = null;
+        private string FilePath = null;
         public DataConverTool(DevComponents.DotNetBar.LabelX lab_progress, DevComponents.DotNetBar.LabelX lb, DevExpress.XtraEditors.MarqueeProgressBarControl progressBar, DevComponents.DotNetBar.Controls.RichTextBoxEx MessageShow, AxMapControl axMap)
         {
             this.lb = lb;
@@ -125,9 +127,11 @@ namespace DataConver
             {
                 if (dataPath.Substring(dataPath.Length - 3) == "已处理")
                     return false;//判断该编制单元是否被处理，是则返回，不是则继续执行
+                DirectoryInfo CollectData = new DirectoryInfo(set.setupPath);
                 di = new DirectoryInfo(dataPath);
+                FileInfo[] collectData = CollectData.GetFiles("CollectData*",SearchOption.AllDirectories);
                 FileInfo[] information = di.GetFiles("*信息.txt", SearchOption.AllDirectories);
-                FileInfo[] yuanData = di.GetFiles("元数据.xml", SearchOption.AllDirectories);
+                FileInfo[] yuanData = di.GetFiles("元数据*", SearchOption.AllDirectories);
                 //成果图的获取
                 DirectoryInfo[] picture = di.GetDirectories("*成果图件*", SearchOption.AllDirectories);
                
@@ -148,7 +152,7 @@ namespace DataConver
                         return false;
                     }
                     else
-                        MessageBox.Show("无淹没过程数据，继续无法将无法生成淹没过程地图", "提示");
+                        MessageBox.Show("无淹没过程数据，继续无法将无法生成淹没过程地图", "提示",MessageBoxButtons.OK, MessageBoxIcon.Information);
                     
                 }
                 MessageShow.Clear();
@@ -172,14 +176,34 @@ namespace DataConver
                 outPath_Mid = importTool.createFolder(String.Format("{0}\\中间数据", outPath));
                 //创建超图结果数据目录
                 outPath_Final = importTool.createFolder(String.Format("{0}\\{1}", outPath, fxtb));
+//单元测试部分
+                //ExcelDataImport("*避洪转移展示支撑数据*.xls*", outPath_Final, "bhzyAttr", "bhzy.udb");
+                //ExcelDataImport("*查询业务支撑数据*.xls*", outPath_Final, null, "ywcx.udb");
+              // ImportMapModel(String.Format("{0}\\MapResult", outPath_Final), outPath_Final, set.mod);
+              
+                //======================================================
+                if (collectData.Length > 0)
+                {
+                    foreach (FileInfo fl in collectData)
+                    {
+                        File.Copy(fl.FullName,String.Format("{0}\\{1}", outPath_Final, fl.Name),true);
+                    }
+                }
                 if(information.Length>0)
-                File.Copy(information[0].FullName, String.Format("{0}\\{1}", outPath_Final, information[0].Name), true);
-                if(yuanData.Length>0)
-                File.Copy(yuanData[0].FullName, String.Format("{0}\\{1}", outPath_Final, yuanData[0].Name), true);
+                   File.Copy(information[0].FullName, String.Format("{0}\\{1}", outPath_Final, information[0].Name), true);
+                if (yuanData.Length > 0)
+                {
+                    foreach (FileInfo yuan in yuanData)
+                    {
+                        File.Copy(yuan.FullName, String.Format("{0}\\{1}", outPath_Final, yuan.Name), true);
+                    }
+                }
                 DirectoryInfo codeDir = new DirectoryInfo(set.setupPath);
                 FileInfo[] codeFile = codeDir.GetFiles("地物编码表.txt",SearchOption.AllDirectories);
 //=======================================================================================
 //----------------------------------------------------------------------------------------
+              
+               
                 Msg(lab_progress.Text = "【" + fxtb + "】正在进行数据转换···");
                 axMapControl.LoadMxFile(mxd[0].FullName, 0, Type.Missing);
                 //提取数据函数调用
@@ -210,18 +234,19 @@ namespace DataConver
                 ztdt(outPath_Final, outPath_Mid);
 //----------------------导入excel数据-------------------------
                 Msg(lab_progress.Text = "【" + fxtb + "】正在导入Excel支撑数据···");
-                ExcelDataImport("*避洪转移展示支撑数据*.xls*", outPath_Final, "bhzyAttr", "bhzy.udb");
-                ExcelDataImport("*查询业务支撑数据*.xls*", outPath_Final, "ywcxAttr", "ywcx.udb");
+                ExcelDataImport("*避洪转移*.xls*", outPath_Final, "bhzyAttr", "bhzy.udb");
+               ExcelDataImport("*查询业务支撑数据*.xls*", outPath_Final, null, "ywcx.udb");
               
 //----------------------------------------------------------------------------------------
                 //避洪转移数据导入
                 Msg(lab_progress.Text = "【" + fxtb + "】正在导入避洪转移数据···");
-                bhzy(dataPath, outPath_Final);
+                bhzy(dataPath, outPath_Final,outPath_Mid);
+
 
 //----------------------------------------------------------------------------------------
                 //复合要素数据导入
-                Msg(lab_progress.Text = "【" + fxtb + "】正在导入复合要素数据···");
-                fhysImport(outPath_Final, outPath_Mid);
+               // Msg(lab_progress.Text = "【" + fxtb + "】正在导入复合要素数据···");
+               // fhysImport(outPath_Final, outPath_Mid);
 
 //----------------------------------------------------------------------------------------
                 //影响分析数据导入
@@ -310,59 +335,41 @@ namespace DataConver
                 ILayer layers = mapControl.get_Layer(i);
                 if (layers is GroupLayer || layers is ICompositeLayer)   //判断是否是groupLayer
                 {
-                   
+
                     //创建文件夹：slgc，ztdt，bhzy
                     if (layers.Name.Equals("水利工程"))
                     {
                         //创建文件夹：slgc
-                        if (!System.IO.Directory.Exists(outPath_Mid + "\\slgc"))
-                        {
-                            string slgcPath = importTool.createFolder(outPath_Mid + "\\slgc");
-                            List<string> StoreFeatureLayerSourse = new List<string>();
-                            //将该文件路径传入函数中
-                            getSlgcSubLayer(layers, slgcPath, StoreFeatureLayerSourse);  //递归的思想
-                        }
-                        else
-                            Msg("【水利工程】处理完毕，不在重复处理");
+
+                        string slgcPath = importTool.createFolder(outPath_Mid + "\\slgc");
+                        List<string> StoreFeatureLayerSourse = new List<string>();
+                        //将该文件路径传入函数中
+                        getSlgcSubLayer(layers, slgcPath, StoreFeatureLayerSourse);  //递归的思想
+
                     }
                     else if (layers.Name.Substring(0, 2).Equals("方案"))
                     {
-
-                        //if (!System.IO.Directory.Exists(outPath_Mid + "\\ztdt"))
-                        //{
-                            //创建ztdu文件夹
-                            string ztdtPath = importTool.createFolder(outPath_Mid + "\\ztdt");
-
-                            //传入参数  ztdt和方案i
-
-                            getSubLayer(layers, ztdtPath, layers.Name + "_", false);  //递归的思想
-                       // }
-                        //else
-                          //  Msg(String.Format("【{0}】处理完毕，不在重复处理", layers.Name.Substring(0, 3)));
-
+                        string ztdtPath = importTool.createFolder(outPath_Mid + "\\ztdt");
+                        getSubLayer(layers, ztdtPath, layers.Name + "_", false,false);  //递归的思想
                     }
-                    else
+                    else if (layers.Name.Equals("避洪转移"))
                     {
-                        if (!System.IO.Directory.Exists(outPath_Mid + "\\fhys"))
-                        {
-                            //创建bhzy文件夹
-                            string bhzyPath = importTool.createFolder(outPath_Mid + "\\fhys");
-                            ////传入参数
-                            getSubLayer(layers, bhzyPath, null, true);  //递归的思想
-                        }
-                        else
-                            Msg("【复合要素】处理完毕，不在重复处理");
-
+                        string bhzyPath = importTool.createFolder(outPath_Mid + "\\bhzy");
+                        getSubLayer(layers, bhzyPath, null, false,true);  //递归的思想
+                    }
+                    else if (layers.Name.Substring(0,2).Equals("复合"))
+                    {
+                        string ztdtPath = importTool.createFolder(outPath_Mid + "\\ztdt");
+                        getSubLayer(layers, ztdtPath, null, true, false);  //递归的思想
                     }
 
                 }
 
             }
-            //MessageBox.Show(layer.Name);
-            //return layer;
+
         }
         //读取子图层
-        public void getSubLayer(ILayer layers, string ExportPath, string plan, bool Isfhys)
+        public void getSubLayer(ILayer layers, string ExportPath, string plan, bool Isfhys,bool Isbhzy)
         {
 
             ICompositeLayer compositeLayer = layers as ICompositeLayer;
@@ -373,10 +380,12 @@ namespace DataConver
                 {
                     if (Isfhys)
                     {
-                        fhys = layer.Name + "_";
+                        fhys = "复合要素_";
                     }
+                    if (Isbhzy)
+                        Bhzy = "避洪转移_" + layer.Name + "_";
                     //MessageBox.Show(layer.Name);
-                    getSubLayer(layer, ExportPath, plan, Isfhys);
+                    getSubLayer(layer, ExportPath, plan, Isfhys,Isbhzy);
                 }
                 else
                 {
@@ -397,26 +406,32 @@ namespace DataConver
                         {
                             if (Isfhys)
                                 layer.Name = fhys + layer.Name;
+                            if (Isbhzy)
+                                layer.Name = Bhzy + layer.Name;
                             if (plan != null && plan.Contains("方案"))
                             {
-                                //if (l.Name.Contains("淹没历时"))
-                                  // MessageBox.Show("淹没历时");
+
                                 if (l.FeatureClass.ShapeType == ESRI.ArcGIS.Geometry.esriGeometryType.esriGeometryPolygon)
                                 {
                                     shp2Raster(gp, l.FeatureClass, l.Name, String.Format("{0}\\{1}", ExportPath, layer.Name));
-                                    
+
                                 }
                                 else
-                                    ExtractFeatureClass(layer.Name, gp, ExportPath, FeatureClassSourse(l));
+                                    if (!ExtractFeatureClass(layer.Name, gp, ExportPath, FeatureClassSourse(l)))
+                                        return; 
+
 
                             }
                             else
-                                ExtractFeatureClass(layer.Name, gp, ExportPath, FeatureClassSourse(l));
+                                if (!ExtractFeatureClass(layer.Name, gp, ExportPath, FeatureClassSourse(l)))
+                                    return; 
                         }
                         else if (r != null)
                         {
                             if (Isfhys)
                                 r.Name = fhys + r.Name;
+                            if (Isbhzy)
+                                layer.Name = Bhzy + layer.Name;
                             ExtractRaster(r.Name, gp, ExportPath, RasterDataSourse(r));
                         }
                         //Msg(layer.Name);
@@ -550,6 +565,8 @@ namespace DataConver
                 string[] uniqueValue = GetUniqueValue(featureClass, "Code");
                 foreach (string codeValue in uniqueValue)
                 {
+                    if (codeValue == "0")
+                        return;
                     getFeature(gp, featureClass, codeValue, SavaFolder, Htable);
                 }
             }
@@ -594,12 +611,26 @@ namespace DataConver
                 //pFeatureLayer = GetFeatureLayer(LayerName);
                 if (pFeatureLayer.DataSourceType == "File Geodatabase Feature Class" || pFeatureLayer.DataSourceType == "文件地理数据库要素类")
                 {
+
+                    string name2="";
+                    string name3=null;
                     IFeatureClass fc = pFeatureLayer.FeatureClass;
                     string name1 = fc.AliasName;
+                   
                     IFeatureDataset fds = fc.FeatureDataset;
-                    string name2 = fds.BrowseName;
-                    string name3 = fds.Workspace.PathName;
-                    featureClassSourse = String.Format("{0}\\{1}\\{2}", name3, name2, name1);
+                   
+                    if (fds != null)
+                    {
+                        name3 =fds.Workspace.PathName;
+                        name2 = fds.BrowseName;
+                        featureClassSourse = String.Format("{0}\\{1}\\{2}", name3, name2, name1);
+                        if (FilePath == null)
+                            FilePath = name3;
+                    }
+                    else
+                        if(FilePath!=null)
+                        featureClassSourse = String.Format("{0}\\{1}", FilePath, name1);
+                   
                     return featureClassSourse;
                 }
                 else
@@ -608,7 +639,7 @@ namespace DataConver
             }
             catch (Exception ex)
             {
-                MessageBox.Show("检查‘完整地图.mxd’中数据路径是否可用"+ex.Message);
+                MessageBox.Show("错误，请检查【完整地图.mxd】中数据路径是否可用");
                 return null;
             }
         }
@@ -627,11 +658,11 @@ namespace DataConver
             }
         }
         //提取矢量数据
-        private void ExtractFeatureClass(string LayerName, Geoprocessor gp, string aimPath, string sourcePath)
+        private bool ExtractFeatureClass(string LayerName, Geoprocessor gp, string aimPath, string sourcePath)
         {
             //Msg("开始处理..." + LayerName);
             if (sourcePath == null)
-                return;
+                return false;
             try
             {
                 ESRI.ArcGIS.DataManagementTools.CopyFeatures copyFeature = new CopyFeatures();
@@ -641,9 +672,11 @@ namespace DataConver
                 gp.Execute(copyFeature, null);
                 Msg(LayerName + "-->转换完成！");
                 vec_count++;
+                return true;
             }
             catch
             {
+                return false;
                 //MessageBox.Show(ex.Message);
             }
 
@@ -658,7 +691,7 @@ namespace DataConver
         /// <param name="sourcePath">存储位置</param>
         private void ExtractRaster(string LayerName, Geoprocessor gp, string aimPath, string sourcePath)
         {
-            Msg("开始处理..." + LayerName);
+            //Msg("开始处理..." + LayerName);
             string RasterName = sourcePath.Substring(sourcePath.LastIndexOf("\\") + 1);
             try
             {
@@ -765,16 +798,16 @@ namespace DataConver
 
             try
             {
-                if (!System.IO.File.Exists(String.Format("{0}\\slgc.udb", outPath_Final)))
-                {
+               // if (!System.IO.File.Exists(String.Format("{0}\\slgc.udb", outPath_Final)))
+               // {
                     //创建udb并加密
                     //DatasourceConnectionInfo info = CreatUDB(outPath_Final, "slgc", set.passWod);
                     DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\slgc.udb", outPath_Final) };
                     DataImport("*.shp", "*.tif", outPath_Mid + "\\slgc\\", info, false);
                     wks.Datasources.CloseAll();
-                }
-                else
-                    Msg( "slgc.udb已存在，系统不再重复生成");
+               // }
+               // else
+                 //   Msg( "slgc.udb已存在，系统不再重复生成");
             }
             catch (Exception ex)
             {
@@ -786,15 +819,15 @@ namespace DataConver
         {
             try
             {
-                if (!System.IO.File.Exists(String.Format("{0}\\ztdt.udb", outPath_Final)))
-                {
+               // if (!System.IO.File.Exists(String.Format("{0}\\ztdt.udb", outPath_Final)))
+              //  {
                     //DatasourceConnectionInfo info = CreatUDB(outPath_Final, "ztdt", set.passWod);
                     DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\ztdt.udb", outPath_Final) };
                     DataImport("*.shp", "*.tif", outPath_Mid + "\\ztdt\\", info, false);
                     wks.Datasources.CloseAll();
-                }
-                else
-                    Msg("ztdt.udb已存在，系统不再重复生成");
+               // }
+               // else
+               //     Msg("ztdt.udb已存在，系统不再重复生成");
             }
             catch (Exception ex)
             {
@@ -811,15 +844,15 @@ namespace DataConver
         {
             try
             {
-                if (!System.IO.File.Exists(String.Format("{0}\\fhys.udb", outPath_Final)))
-                {
+               // if (!System.IO.File.Exists(String.Format("{0}\\fhys.udb", outPath_Final)))
+              //  {
                     //DatasourceConnectionInfo info = CreatUDB(outPath_Final, "ztdt", set.passWod);
-                    DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\fhys.udb", outPath_Final) };
+                    DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\slgc.udb", outPath_Final) };
                     DataImport("*.shp", "*.tif", outPath_Mid + "\\fhys\\", info, false);
                     wks.Datasources.CloseAll();
-                }
-                else
-                    Msg("fhys.udb已存在，系统不再重复生成");
+               // }
+               // else
+               //     Msg("fhys.udb已存在，系统不再重复生成");
             }
             catch (Exception ex)
             {
@@ -836,8 +869,8 @@ namespace DataConver
                 //创建数据源
                 di = new DirectoryInfo(yxfx_path);
                 DirectoryInfo[] yxfxPath = di.GetDirectories("6.3影响分析支撑数据", SearchOption.AllDirectories);
-                if (!System.IO.File.Exists(String.Format("{0}\\yxfx.udb", outPath_Final)))
-                {
+                //if (!System.IO.File.Exists(String.Format("{0}\\yxfx.udb", outPath_Final)))
+              //  {
                     DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\yxfx.udb", outPath_Final) };
                     foreach (DirectoryInfo dd in yxfxPath)
                     {
@@ -858,9 +891,9 @@ namespace DataConver
                         Msg("用时：" + ExecDateDiff(datetime, DateTime.Now));
                     }
                     wks.Datasources.CloseAll();
-                }
-                else
-                    Msg("yxfx.udb已存在，系统不再重复生成");
+                //}
+                //else
+                 //   Msg("yxfx.udb已存在，系统不再重复生成");
             }
             catch (Exception ex)
             {
@@ -868,7 +901,7 @@ namespace DataConver
             }
         }
         //避洪转移数据导入
-        public void bhzy(string bhzy_path, string outPath_Final)
+        public void bhzy(string bhzy_path, string outPath_Final, string outPath_Mid)
         {
             try
             {
@@ -876,8 +909,6 @@ namespace DataConver
                 //创建数据源
                 di = new DirectoryInfo(bhzy_path);
                 DirectoryInfo[] bhzyPath = di.GetDirectories("6.4避洪转移展示支撑数据", SearchOption.AllDirectories);
-                if (!System.IO.File.Exists(String.Format("{0}\\bhzy.udb", outPath_Final)))
-                {
                     DatasourceConnectionInfo info = new DatasourceConnectionInfo() { Password = set.passWord, Server = String.Format("{0}\\bhzy.udb", outPath_Final) };
                     FileInfo[] info_file = bhzyPath[0].GetFiles("*.shp", SearchOption.AllDirectories);
                     max = info_file.Length;
@@ -890,13 +921,13 @@ namespace DataConver
                         pgrs(++p);
                         Msg(NextFolder.Name + "-->导入成功！");
                     }
+                    DataImport("*.shp", "*.tif", outPath_Mid + "\\bhzy\\", info, false);
+
                     Msg(String.Format("本次成功导入数据{0}条", importTool.i));
                     Msg("用时：" + ExecDateDiff(datetime, DateTime.Now));
                     //}
                     wks.Datasources.CloseAll();
-                }
-                else
-                    Msg("bhzy.udb已存在，系统不再重复生成");
+               
             }
             catch (Exception ex)
             {
@@ -920,17 +951,17 @@ namespace DataConver
                 {
                     foreach (DirectoryInfo ymgcX in tifDi.GetDirectories())
                     {
-                        if (!System.IO.File.Exists(String.Format("{0}\\{1}.udb", outPath_Final, ymgcX.Name)))
+                       // if (!System.IO.File.Exists(String.Format("{0}\\{1}.udb", outPath_Final, ymgcX.Name)))
                         //DatasourceConnectionInfo info = CreatUDB(outPath_Final, "ztdt", set.passWod);
                         //string udbName = ymgc_path.Substring(ymgc_path.LastIndexOf("\\") + 1);
-                        {
+                      //  {
                             DatasourceConnectionInfo info = new DatasourceConnectionInfo();
                             info.Password = set.passWord;
                             info.Server = String.Format("{0}\\{1}.udb", outPath_Final, ymgcX.Name);
                             DataImport(" ", "*.tif", ymgcX.FullName + "\\", info, true);
-                        }
-                        else
-                            Msg(ymgcX.Name+"已存在，系统不再重复生成");
+                      //  }
+                      //  else
+                        //    Msg(ymgcX.Name+"已存在，系统不再重复生成");
                     }
                     wks.Datasources.CloseAll();
                 }
@@ -953,7 +984,7 @@ namespace DataConver
                     //string bhzyXlName = "bhzyAtrr.csv";
                     foreach (FileInfo xlPath in info_file)
                     {
-                        toCSVStatus = ExcelSheets2csv(String.Format("{0}\\{1}", xlPath.DirectoryName, xlPath.Name),  xlPath.DirectoryName);
+                        toCSVStatus = ExcelSheets2csv(String.Format("{0}\\{1}", xlPath.DirectoryName, xlPath.Name), xlPath.DirectoryName, csvName);
                     }
                     if (toCSVStatus)
                     {
@@ -1135,10 +1166,10 @@ namespace DataConver
 
         public void ImportMapModel( string wsp, string sources, string symbol)
         {
-            if (!System.IO.File.Exists(wsp + ".smwu"))
+            //if (!System.IO.File.Exists(wsp + ".smwu"))
                 CreateWorkspace(wsp, sources, symbol);
-            else
-                Msg("地图工作空间已存在，不再重复创建！");
+           // else
+               // Msg("地图工作空间已存在，不再重复创建！");
             try
             {
                 SuperMap.Data.Workspace sWorkspace1 = new SuperMap.Data.Workspace();
@@ -1151,10 +1182,17 @@ namespace DataConver
                 DirectoryInfo[] model = di.GetDirectories("MapModel", SearchOption.AllDirectories);
                 //DirectoryInfo directory = new DirectoryInfo(set.setupPath);
                 FileInfo[] xml = model[0].GetFiles("*.xml");
-                FileInfo[] finfoYmss = di.GetFiles("*淹没水深*.xml", SearchOption.AllDirectories);
-                FileInfo[] finfoYmls = di.GetFiles("*淹没历时*.xml", SearchOption.AllDirectories);
-                FileInfo[] finfoDdsj = di.GetFiles("*到达时间*.xml", SearchOption.AllDirectories);
-                FileInfo[] finfoYmt = di.GetFiles("*淹没图*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoYmss = di.GetFiles("*淹没水深专题图*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoYmls = di.GetFiles("*淹没历时专题图*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoDdsj = di.GetFiles("*到达时间专题图*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoYmt = di.GetFiles("*淹没图专题图*.xml", SearchOption.AllDirectories);
+              // FileInfo[] finfoCountry = di.GetFiles("*村及其他驻地*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoJSK = di.GetFiles("*进水口专题图*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoJSKX = di.GetFiles("*进水口线专题图*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoFxqh = di.GetFiles("*复合要素_风险区划*.xml", SearchOption.AllDirectories);
+                FileInfo[] finfoYmfw = di.GetFiles("*复合要素_淹没范围*.xml", SearchOption.AllDirectories);
+                
+                
                 max = xml.Length; int p = 0;
                 if (model.Length <= 0)
                 {
@@ -1175,20 +1213,26 @@ namespace DataConver
                     Msg(nn.Name + "模板-->导入成功");
                     if (nn.Name.Contains("jcdt"))
                     {
-                        //更新地图
+                        //更新基础地图
                         if (sWorkspace1.Datasources["ztdt"] != null)
                         {
-                            Datasource ds = sWorkspace1.Datasources["ztdt"];
-
+                            Datasource ds_ztdt = sWorkspace1.Datasources["ztdt"];
+                           // Datasource ds_fhys = sWorkspace1.Datasources["fhys"];
                             string ref_YMSS = finfoYmss[0].FullName;
                             string ref_YMLS = finfoYmls[0].FullName;
                             string ref_DDSJ = finfoDdsj[0].FullName;
                             string ref_YMT = finfoYmt[0].FullName;
-                            map = importTool.refresModels(ds, map, Mapname, ref_YMSS, ref_YMLS, ref_DDSJ, ref_YMT);
-                            sWorkspace1.Maps.SetMapXML(Mapname, map.ToXML());
-                            sWorkspace1.Save();
+                            string ref_JSK = finfoJSK[0].FullName;
+                            string ref_JSKX = finfoJSKX[0].FullName;
+                            string ref_Fxqh = finfoFxqh[0].FullName;
+                            string ref_Ymfw = finfoYmfw[0].FullName;
+                            map = importTool.refresModels(ds_ztdt, map, Mapname, ref_YMSS, ref_YMLS, ref_DDSJ, ref_YMT,ref_JSK,  ref_JSKX,ref_Fxqh, ref_Ymfw);
+                                                                                                                       
+                            sWorkspace1.Maps.SetMapXML(Mapname, map.ToXML());                                           
+                            sWorkspace1.Save();                                                                        
                         }
                         Msg(String.Format("地图{0}-->更新成功！", Mapname));
+                        //更新淹没过程图
                         for (int i = 0; i < sWorkspace1.Datasources.Count; i++)
                         {
                             string datasourceName = sWorkspace1.Datasources[i].Alias;
@@ -1203,10 +1247,39 @@ namespace DataConver
                             }
                         }
 
+
                     }
+                    if (nn.Name.Contains("bhzy"))
+                    {
+                        if (sWorkspace1.Datasources["bhzy"] != null)
+                        {
+                            Datasource ds = sWorkspace1.Datasources["bhzy"];
 
+                            string ref_YMSS = finfoYmss[0].FullName;
+                           // string ref_Country = finfoCountry[0].FullName;
+                            string ref_JSK = finfoJSK[0].FullName;
+                            string ref_JSKX = finfoJSKX[0].FullName;
+                            map = importTool.refresModelsBhzy(ds, map, Mapname, ref_YMSS, ref_JSK, ref_JSKX);
+                            sWorkspace1.Maps.SetMapXML(Mapname, map.ToXML());
+                            sWorkspace1.Save();
+                        }
+                        Msg(String.Format("地图{0}-->更新成功！", Mapname));
+                    }
+                                     
 
-                   
+                }
+                Datasource Collectdata = sWorkspace1.Datasources["CollectData"];
+                for (int mIndex = 0; mIndex < maps.Count;mIndex++ )
+                {
+
+                    map = importTool.addCollectData2Maps(Collectdata, map, maps[mIndex]);
+                    if (map != null)
+                    {
+                       // maps.Remove(maps[mIndex]);
+                        sWorkspace1.Maps.SetMapXML(maps[mIndex], map.ToXML());
+                        Msg(String.Format("地图{0}-->添加采集数据成功！", maps[mIndex]));
+                        sWorkspace1.Save();
+                    }
 
                 }
                 if (sWorkspace1.Save())
@@ -1291,14 +1364,15 @@ namespace DataConver
 
                 di = new DirectoryInfo(sources);
                 FileInfo[] fl = di.GetFiles("*.udb");
-                for (int s = 0; s < fl.Length; s++)
+                foreach (FileInfo f in fl)//int s = 0; s < fl.Length; s++)
                 {
 
                     DatasourceConnectionInfo ds = new DatasourceConnectionInfo();
-                    ds.Alias = fl[s].Name.Substring(0, fl[s].Name.Length - 4);
+                    ds.Alias = f.Name.Substring(0, f.Name.Length - 4);
                     Msg("添加数据源：" + ds.Alias);
 
-                    ds.Server = String.Format("{0}\\{1}", sources, fl[s]);
+                    ds.Server = f.FullName;// String.Format("{0}\\{1}", sources, fl[s]);
+                    if(!f.Name.Contains("CollectData"))
                     ds.Password = set.passWord;
                     //ds.Password = "aaaazzzz";
                     Datasource datasource = workspace.Datasources.Open(ds);
@@ -1342,7 +1416,8 @@ namespace DataConver
 
                     if (split.Length < 2)//陈杜彬3.7修改 
                     {
-                        line.Add(split[0]);
+                        
+                        line.Add(Convert.ToUInt32(Convert.ToDouble(split[0])).ToString());
                         if (hs != null)
                         {
                             progressBar.EditValue = lab_progress.Text = "正在生成【" + ymgcName + "】：time" + line[line.Count - 2] + ".tif·····";
@@ -1806,7 +1881,7 @@ namespace DataConver
                 return null;
             }
         }
-        public bool ExcelSheets2csv(string SourceExcelPathAndName, string targetCSVPathAndName)
+        public bool ExcelSheets2csv(string SourceExcelPathAndName, string targetCSVPathAndName,string cvsname)
         {
             Microsoft.Office.Interop.Excel.Application OXL = new Microsoft.Office.Interop.Excel.Application();
             Microsoft.Office.Interop.Excel.Workbook xlWorkBook = OXL.Workbooks.Open(SourceExcelPathAndName);
@@ -1814,13 +1889,19 @@ namespace DataConver
             {
                 
                 OXL.Visible = false;
+                OXL.DisplayAlerts = false;
                 foreach (Microsoft.Office.Interop.Excel.Worksheet sht in xlWorkBook.Worksheets)
                 {
                     sht.Select();
                     string name = sht.Name;
                     Microsoft.Office.Interop.Excel.Range range = sht.UsedRange.get_Range("A1", Type.Missing).EntireRow;
                     range.Delete(XlDeleteShiftDirection.xlShiftUp);
+                   // xlWorkBook.Save();
+                    if (cvsname == null) 
                     xlWorkBook.SaveAs(targetCSVPathAndName + "\\ywcx" + name + ".csv", Microsoft.Office.Interop.Excel.XlFileFormat.xlCSV, Microsoft.Office.Interop.Excel.XlSaveAsAccessMode.xlNoChange);
+                    else
+                        xlWorkBook.SaveAs(targetCSVPathAndName + cvsname+".csv", Microsoft.Office.Interop.Excel.XlFileFormat.xlCSV, Microsoft.Office.Interop.Excel.XlSaveAsAccessMode.xlNoChange);
+
                 }
                 return true;
             }

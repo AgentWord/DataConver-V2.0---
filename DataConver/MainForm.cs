@@ -91,6 +91,7 @@ namespace DataConver
         //窗口载入
         private void MainForm_Load(object sender, EventArgs e)
         {
+           // MessageBox.Show(set.setupPath);
             int l = this.Width;
             //splitContainerControl1.SplitterPosition = l / 3;
             if (set.report != "OK")
